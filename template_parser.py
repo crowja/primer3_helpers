@@ -1,3 +1,5 @@
+import re
+
 def _find_regions(seq, delim_open, delim_close):
 
     """Locate the regions marked by a delimiter pair.
@@ -9,14 +11,15 @@ def _find_regions(seq, delim_open, delim_close):
     delim_close: Symbol signifying previous base in the sequence template ends a region.
     """
 
+    # Parser states
     pstate_null = 0  # default
     pstate_open = 1  # found an open delimiter
 
     s = seq.replace(" ", "")  # remove whitespace from input sequence
 
-    pos = 0
-    start = -1
-    width = 0
+    pos = 0  # track where we are in the sequence of bases only
+    start = -1  # beginning of current region
+    width = 0  # (current) width of current region
     state = pstate_null
     starts = []
     widths = []
@@ -64,10 +67,48 @@ def _find_regions(seq, delim_open, delim_close):
     return starts, widths
 
 
+def _find_junctions(seq):
+
+    """Locate the junctions marked by a delimiter "-".
+
+    locs = _find_junctions(seq_template)
+
+    seq:         Primer3 sequence template. E.g., ACGT[TAC]G-CC[CCGA]ATT.
+    """
+
+    re1 = re.compile("[<>{}\[\] ]+")
+    re2 = re.compile("[\-]+")
+    t = re1.sub("", seq) # first remove region delimiters, whitespace, ...
+    s = re2.sub("-", t) # ... then squash adjacent repeated "-" symbols
+    print("NEW SEQ ", s)
+
+
 if __name__ == "__main__":
+
+    # For [] regions: 4, 2; 8, 10; 81, 4; 85, 10
     seq = "GAG{[GT]AG[TCAGTAGACN]ATGACN-ACT-GACGATGCAGACNACACACACACACACAGCACACAGGTATTAGTGGGCCATTCG[ATCC][CGACCCAAAT]CGATAGCTACGAT-G}ACG"
 
-    # For [] regions: 4, 2; 8, 10; 81, 4
     starts, widths = _find_regions(seq, "[", "]")
     print("STARTS: ", starts)
     print("WIDTHS: ", widths)
+
+    # For [] regions: 4, 4; 8, 5
+    seq = "AAA[AAAA][AAAAA]AAA"
+    starts, widths = _find_regions(seq, "[", "]")
+    print("STARTS: ", starts)
+    print("WIDTHS: ", widths)
+
+    # For [] regions: 1, 14
+    seq = "[AAAAAAAAAAAAAA]"
+    starts, widths = _find_regions(seq, "[", "]")
+    print("STARTS: ", starts)
+    print("WIDTHS: ", widths)
+
+    # For [] regions: 1, 1; 2, 1; 3, 1; 4, 1; 5, 10
+    seq = "[A][A][A][A][AAAAAAAAAA]"
+    starts, widths = _find_regions(seq, "[", "]")
+    print("STARTS: ", starts)
+    print("WIDTHS: ", widths)
+   
+    seq = "aaa-aaaa-aaaaa-aaaa---a--a-a"
+    _find_junctions(seq)
