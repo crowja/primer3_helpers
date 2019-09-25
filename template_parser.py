@@ -52,6 +52,8 @@ def _find_regions(seq, delim_open, delim_close):
                 )
             elif state == pstate_open:
                 print(f"Region is {start}, {width}")
+                starts.extend([start + 1])  # convert to base 1 indexing
+                widths.extend([width])
                 width = 0
                 state = pstate_null
             else:
@@ -59,8 +61,13 @@ def _find_regions(seq, delim_open, delim_close):
         else:  # A character to ignore, e.g. a different delimiter
             pass
 
+    return starts, widths
 
-seq = "GAG{[GT]AG[TCAGTAGACN]ATGACN-ACT-GACGATGCAGACNACACACACACACACAGCACACAGGTATTAGTGGGCCATTCG[ATCC][CGACCCAAAT]CGATAGCTACGAT-G}ACG"
 
-# For [] regions: 4, 2; 8, 10; 81, 4
-_find_regions(seq, "[", "]")
+if __name__ == "__main__":
+    seq = "GAG{[GT]AG[TCAGTAGACN]ATGACN-ACT-GACGATGCAGACNACACACACACACACAGCACACAGGTATTAGTGGGCCATTCG[ATCC][CGACCCAAAT]CGATAGCTACGAT-G}ACG"
+
+    # For [] regions: 4, 2; 8, 10; 81, 4
+    starts, widths = _find_regions(seq, "[", "]")
+    print("STARTS: ", starts)
+    print("WIDTHS: ", widths)
